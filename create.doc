@@ -17,3 +17,7 @@ Bước 2: Cài dependencies chính
 Bước 3: Cấu hình TypeScript   
     - Tạo file tsconfig.json
         npx tsc --init
+
+Bước 4: Tạo api
+
+Bước 5: Tải Postgres (user-pass: default)
