@@ -1,0 +1,19 @@
+Bước 1: npm init -y
+
+Bước 2: Cài dependencies chính
+    - npm install express typeorm reflect-metadata pg swagger-ui-express
+        express → framework web, để tạo server và định nghĩa routes (API).
+        typeorm → ORM giúp làm việc với database PostgreSQL bằng Entity (class) thay vì query SQL trực tiếp.
+        reflect-metadata → bắt buộc để TypeORM hoạt động (dùng cho decorators).
+        pg → PostgreSQL driver, để Node.js có thể kết nối với Postgres.
+        swagger-ui-express → hiển thị API docs (Swagger UI) trên trình duyệt.
+    - npm install -D typescript ts-node nodemon @types/node @types/express
+        typescript → để code bằng TypeScript.
+        ts-node → chạy trực tiếp file .ts mà không cần build.
+        nodemon → auto restart server khi code thay đổi (tiện cho dev).
+        @types/node → type định nghĩa cho Node.js.
+        @types/express → type định nghĩa cho Express.
+
+Bước 3: Cấu hình TypeScript   
+    - Tạo file tsconfig.json
+        npx tsc --init
