@@ -1,5 +1,5 @@
+// src/server.ts
 import "reflect-metadata";
-import { DataSource } from "typeorm";
 import app from "./app";
 import { AppDataSource } from "./configs/typeorm.config";
 
