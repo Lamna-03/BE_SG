@@ -51,6 +51,25 @@ const registerPaths = () => {
     request: { query: PostVerifyEmailSchema.shape.query },
     responses: createApiResponse(z.boolean(), "Success", 201),
   });
+
+ authRegistry.registerPath({
+    method: "post",
+    path: "/auth/refresh-token",
+    tags: ["Auth"],
+    request: {
+      body: {
+        content: {
+          "application/json": {
+            schema: z.object({
+              refreshToken: z.string().describe("JWT refresh token"),
+            }),
+          },
+        },
+      },
+    },
+
+    responses: createApiResponse(TokenSchema, "Success"),
+  });
 };
 
 // Route to create a new user
@@ -84,6 +103,24 @@ router.post(
     const serviceResponse = await authService.login(userData);
     handleServiceResponse(serviceResponse, res);
   }
+);
+
+// router.post("/logout", async (req: Request, res: Response) => {
+//   const refreshToken = req.body.refreshToken;
+//   const serviceResponse = await authService.logout(refreshToken);
+//   handleServiceResponse(serviceResponse, res);
+// });
+
+router.post("/refresh-token", async (req: Request, res: Response) => {
+  const refreshToken = req.body.refreshToken;
+  if (!refreshToken) {
+    return res
+      .status(400)
+      .json({ message: "Refresh token is required" });
+  }
+  const serviceResponse = await authService.refreshToken(refreshToken);
+  handleServiceResponse(serviceResponse, res);
+}
 );
 
 registerPaths();

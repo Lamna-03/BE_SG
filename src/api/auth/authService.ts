@@ -2,7 +2,7 @@ import bcrypt from "bcryptjs";
 import { StatusCodes } from "http-status-codes";
 
 import { UserRepository } from "../user/user.repository";
-import { User } from "../../common/entities/user.entity";
+import { User } from "../../common/entities/User.entity";
 import { MailTrigger } from "../../common/enums/enumBase";
 import {
   ResponseStatus,
@@ -72,7 +72,7 @@ export class AuthService {
       const decoded = verifyJwt(token);
 
       // Extract the user ID from the decoded JWT payload
-      let userId: number;
+      let userId: string;
       if (
         typeof decoded === "object" &&
         decoded !== null &&
@@ -179,6 +179,53 @@ export class AuthService {
       );
     } catch (ex) {
       const errorMessage = `Error logging in: ${(ex as Error).message}`;
+      console.error(errorMessage);
+      return new ServiceResponse(
+        ResponseStatus.FAIL,
+        errorMessage,
+        null,
+        StatusCodes.INTERNAL_SERVER_ERROR
+      );
+    }
+  }
+
+  async refreshToken(oldRefreshToken: string): Promise<ServiceResponse<Token | null>> {
+    try {
+      const decoded = verifyJwt(oldRefreshToken);
+      if (!decoded || typeof decoded !== 'object' || !('userId' in decoded)) {
+        return new ServiceResponse(
+          ResponseStatus.FAIL,
+          'Invalid refresh token',
+          null,
+          StatusCodes.UNAUTHORIZED
+        );
+      }
+      const userId = (decoded as any).userId;
+      const user = await this.userRepository.findById(userId);
+      if (!user) {
+        return new ServiceResponse(
+          ResponseStatus.FAIL,
+          'User not found',
+          null,
+          StatusCodes.NOT_FOUND
+        );
+      } 
+      const expiresIn = process.env.JWT_EXPIRES_IN || '1d';
+      const newToken: Token = {
+        accessToken: generateJwt({ userId: user.id }),
+        refreshToken: generateJwt({ userId: user.id }),
+        expiresIn: expiresIn,
+        tokenType: 'Bearer',
+      };
+
+      return new ServiceResponse<Token>(
+        ResponseStatus.SUCCESS,
+        'Token refreshed successfully',
+        newToken,
+        StatusCodes.OK
+      );
+    } catch (ex) {
+      const errorMessage = `Error refreshing token: ${(ex as Error).message}`;
       console.error(errorMessage);
       return new ServiceResponse(
         ResponseStatus.FAIL,

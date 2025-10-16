@@ -4,8 +4,8 @@ import { Card } from "./Card.entity";
 
 @Entity()
 export class List {
-    @PrimaryGeneratedColumn()
-    id!: number; 
+    @PrimaryGeneratedColumn("uuid")
+    id!: string;
 
     @Column()
     name!: string;

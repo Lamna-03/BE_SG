@@ -4,8 +4,8 @@ import { Comment } from "./Comment.entity";
 
 @Entity()
 export class Card {
-    @PrimaryGeneratedColumn()
-    id!: number;
+    @PrimaryGeneratedColumn("uuid")
+    id!: string;
 
     @Column()
     name!: string;

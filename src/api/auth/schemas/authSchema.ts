@@ -8,7 +8,7 @@ export type Token = z.infer<typeof TokenSchema>;
 
 export const TokenSchema = z.object({
     accessToken: z.string(),
-        refreshToken: z.string(),
+    refreshToken: z.string(),
     expiresIn: z.union([z.string(), z.number()]),
     tokenType: z.string(),
 })
@@ -30,7 +30,7 @@ export const PostLogin: ZodRequestBody = {
 
 export const PostVerifyEmailSchema = z.object({
     query: z.object({
-        token: z.string().uuid(),
+        token: z.string(),
     }),
 });
 

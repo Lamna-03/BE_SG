@@ -7,6 +7,7 @@ import { GetUserSchema, UserSchema } from "./user.model";
 import { UserService } from "./user.service";
 import { createApiResponse } from "../../api-docs/openAPIResponseBuilders";
 import { handleServiceResponse, validateRequest } from "../../common/utils/httpHandlers";
+import { authenticateJWT } from "../../common/middleware/auth.middleware";
 export const userRegistry = new OpenAPIRegistry();
 userRegistry.register('User', UserSchema);
 userRegistry.register('PostUser', PostUserSchema);
@@ -28,14 +29,14 @@ const registerPaths = () => {
     userRegistry.registerPath({
         method: "get",
         path: "/users/",
-        tags: ["User"],
+        tags: ["Users"],
         responses: createApiResponse(z.array(UserSchema), 'success'),
     });
 
     userRegistry.registerPath({
         method: "get",
         path: "/users/{id}",
-        tags: ["User"],
+        tags: ["Users"],
         request: {
             params: GetUserSchema.shape.params,
         },
@@ -45,7 +46,7 @@ const registerPaths = () => {
     userRegistry.registerPath({
         method: 'get',
         path: '/users/me',
-        tags: ['User'],
+        tags: ['Users'],
         security: [{ bearerAuth: [] }],
         responses: createApiResponse(UserSchema, 'Success'),
     });
@@ -59,9 +60,9 @@ router.post("/", validateRequest(PostUserSchema), async (req: Request, res: Resp
 });
 
 //get current user profile
-router.get('/me', async (req: Request, res: Response) => {
+router.get('/me', authenticateJWT, async (req: Request, res: Response) => {
     // Assuming you have some middleware that sets req.user based on the authentication token
-    const userId = (req as any).user?.id; // Adjust according to your auth implementation
+    const userId = (req as any).user.userId; // Adjust according to your auth implementation
     if (!userId) {
         return res.status(401).send({ message: 'Unauthorized' });
     }
@@ -72,7 +73,7 @@ router.get('/me', async (req: Request, res: Response) => {
 // Route to get a user by id
 router.get('/:id', validateRequest(GetUserSchema), async (req: Request, res: Response) => {
   const id = req.params.id;
-  const serviceResponse = await new UserService().findById(Number(id));
+  const serviceResponse = await new UserService().findById(id);
   handleServiceResponse(serviceResponse, res);
 });
 
