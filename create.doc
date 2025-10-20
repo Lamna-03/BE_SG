@@ -21,3 +21,5 @@ Bước 3: Cấu hình TypeScript
 Bước 4: Tạo api
 
 Bước 5: Tải Postgres (user-pass: default)
+
+rbac: tao role va permissions ; noi role no de dung cho workspace member, sau do dung middleware de check role hoac permissions cho phu hop.

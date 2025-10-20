@@ -68,26 +68,35 @@ export class WorkspaceRepository {
     }
 
     async addMember(workspace: Workspace, user: User, role: 'ADMIN' | 'MEMBER' | 'VIEWER'): Promise<Workspace_member> {
-        const newMember = this.memberRepository.create({
-            workspace,
-            user,
-            role,
-        });
-        return this.memberRepository.save(newMember);
-    }
+    const newMember = this.memberRepository.create({
+      workspace,
+      user,
+      role,
+    });
+    return this.memberRepository.save(newMember);
+  }
 
     async removeMember(workspaceId: string, userId: string): Promise<boolean> {
-        const result = await this.memberRepository.delete({
-            workspace: { id: workspaceId },
-            user: { id: userId },
-        });
-        return result.affected !== 0;
-    }
+    const result = await this.memberRepository.delete({
+      workspace: { id: workspaceId },
+      user: { id: userId },
+    });
+    return result.affected !== 0;
+  }
 
     async listMembers(workspaceId: string): Promise<Workspace_member[]> {
         return this.memberRepository.find({
             where: { workspace: { id: workspaceId } },
             relations: ['user'], // Lấy cả thông tin user
         });
+    }
+    async updateMemberRole(workspaceId: string, userId: string,newRole: 'ADMIN' | 'MEMBER' | 'VIEWER' ): Promise<Workspace_member | null>{
+      const member = await this.findMember(workspaceId,userId);
+      if (!member){
+        return null;
+      }
+
+      member.role = newRole
+      return this.memberRepository.save(member)
     }
 }
