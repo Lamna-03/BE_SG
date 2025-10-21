@@ -6,8 +6,9 @@ import { z } from 'zod'
 import { createApiResponse } from '../../api-docs/openAPIResponseBuilders';
 import { authenticateJWT } from '../../common/middleware/auth.middleware';
 import { handleServiceResponse, validateRequest } from '../../common/utils/httpHandlers';
-import { CreateWorkspaceSchema, WorkspaceIdSchema, PostWorkspace, WorkspaceSchema, UpdateWorkspaceSchema } from './schemas/workspaceSchema';
+import { CreateWorkspaceSchema, WorkspaceIdSchema, PostWorkspace, WorkspaceSchema, UpdateWorkspaceSchema, InviteMemberSchema, MemberParamsSchema, UpdateMemberRoleSchema } from './schemas/workspaceSchema';
 import { WorkspaceService } from './workspace.service';
+import { checkWorkspaceRole } from '../../common/middleware/auth.middleware';
 
 export const workspaceRegistry = new OpenAPIRegistry();
 workspaceRegistry.register('Workspace', WorkspaceSchema);
@@ -104,7 +105,7 @@ router.get('/:id', validateRequest(WorkspaceIdSchema), async (req: Request, res:
 });
 
 // [PUT] /workspaces/:id - Cập nhật workspace
-router.put('/:id', validateRequest(UpdateWorkspaceSchema), async (req: Request, res: Response) => {
+router.put('/:id', validateRequest(UpdateWorkspaceSchema),checkWorkspaceRole(['OWNER', 'ADMIN']), async (req: Request, res: Response) => {
     const userId = (req as any).user.userId;
     const { id } = req.params;
     const data = req.body;
@@ -113,16 +114,48 @@ router.put('/:id', validateRequest(UpdateWorkspaceSchema), async (req: Request, 
 });
 
 // [DELETE] /workspaces/:id - Xóa workspace
-router.delete('/:id', validateRequest(WorkspaceIdSchema), async (req: Request, res: Response) => {
+router.delete('/:id', validateRequest(WorkspaceIdSchema),checkWorkspaceRole(['OWNER']), async (req: Request, res: Response) => {
     const userId = (req as any).user.userId;
     const { id } = req.params;
     const serviceResponse = await workspaceService.deleteWorkspace(id, userId);
     handleServiceResponse(serviceResponse, res);
 });
 
-
-// (Optional) Các routes cho quản lý thành viên
 // [POST] /workspaces/:id/members - Mời thành viên mới
+router.post('/:id/members', validateRequest(InviteMemberSchema),checkWorkspaceRole(['OWNER', 'ADMIN']), async (req: Request, res: Response) => {
+    const inviterId = (req as any).user.userId;
+    const { id } = req.params;
+    const inviteData = req.body;
+    const serviceResponse = await workspaceService.inviteMember(id, inviterId, inviteData);
+    handleServiceResponse(serviceResponse, res);
+});
+
 // [GET] /workspaces/:id/members - Lấy danh sách thành viên
-// [DELETE] /workspaces/:id/members/:userId - Xóa thành viên
+router.get('/:id/members', validateRequest(WorkspaceIdSchema),
+    checkWorkspaceRole(['OWNER', 'ADMIN', 'MEMBER', 'VIEWER']),
+async (req: Request, res: Response) => {
+    const requesterId = (req as any).user.userId;
+    const { id } = req.params;
+    const serviceResponse = await workspaceService.getWorkspaceMembers(id, requesterId);
+    handleServiceResponse(serviceResponse, res);
+});
+
+// [DELETE] /workspaces/:workspaceId/members/:userId - Xóa thành viên
+router.delete('/:workspaceId/members/:userId', validateRequest(MemberParamsSchema),checkWorkspaceRole(['OWNER', 'ADMIN']), async (req: Request, res: Response) => {
+    const removerId = (req as any).user.userId;
+    const { workspaceId, userId } = req.params;
+    const serviceResponse = await workspaceService.removeMemberFromWorkspace(workspaceId, removerId, userId);
+    handleServiceResponse(serviceResponse, res);
+});
+
+// [PUT] /workspaces/:workspaceId/members/:userId - Cập nhật vai trò thành viên
+router.put('/:workspaceId/members/:userId', validateRequest(UpdateMemberRoleSchema),checkWorkspaceRole(['OWNER', 'ADMIN']), async (req: Request, res: Response) => {
+    const updaterId = (req as any).user.userId;
+    const { workspaceId, userId } = req.params;
+    const data = req.body;
+    const serviceResponse = await workspaceService.updateMemberRole(workspaceId, updaterId, userId, data);
+    handleServiceResponse(serviceResponse, res);
+});
+
+
 export const workspaceRouter: Router = router;

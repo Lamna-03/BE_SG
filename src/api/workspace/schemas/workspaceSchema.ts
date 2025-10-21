@@ -62,6 +62,21 @@ export const MemberParamsSchema = z.object({
   }),
 });
 
+// sche ma cap nhat vai tro cua thanh vien
+export const UpdateMemberRoleSchema = z.object({
+  body: z.object({
+    role: z.enum(['ADMIN', 'MEMBER', 'VIEWER'], {
+      errorMap: () => ({ message: 'Role must be one of: ADMIN, MEMBER, VIEWER' }),
+    }),
+  }),
+  params: z.object({
+    workspaceId: z.string().uuid('Invalid workspace ID'),
+    userId: z.string().uuid('Invalid user ID'),
+  }),
+});
+
+export type UpdateMemberRoleType = z.infer<typeof UpdateMemberRoleSchema>['body'];
+
 //schema cho openapi
 export const PostWorkspace: ZodRequestBody = {
   description: "Create a new workspace",
